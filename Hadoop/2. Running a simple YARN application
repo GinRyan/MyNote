@@ -3,3 +3,122 @@
 我们在前一篇里了解了如何安装一个Hadoop可运行的环境以及HDFS，接下来我们从spring.io站点上下载一个小例子，运行一下。
 
 ##1.下载范例
+
+我们先去spring.io上下载范例，而在spring.io上，实际上也有详细的说明如何使用范例。我们跟着来就可以了。
+[http://spring.io/guides/gs/yarn-basic/](http://spring.io/guides/gs/yarn-basic/)
+这个范例提供了Github地址去下载源码，也提供了zip下载，我们只是运行范例，只要zip下载就可以了。这个范例由于是跟着spring.io官网上的教程创建的，所以里面实际上包含了两个项目目录，一个是`initial`，这里面没有实际代码，我们只要把`complete`目录解压出来，并且重命名即可。我们假设重命名为`gs-yarn-basic-proj`。我们查看此目录，这应该是一个有着多个项目的gradle管理和maven的目录，我以gradle导入方式为例。
+
+我们在这之前指定了hdfs的端口为`9000`，那么我们也要在项目中指定访问这个端口。要改的文件有三处：
+项目根目录gs-yarn-basic-proj开始：
+`gs-yarn-basic-appmaster/src/main/resources/application.yml`
+`gs-yarn-basic-container/src/main/resources/application.yml`
+`gs-yarn-basic-client/src/main/resources/application.yml`
+这三个yaml文件当中，分别有一个属性值为`fsUri: hdfs://localhost:8020`，默认值访问端口是8020，然而实际上我们需要修改这个端口为之前我们配置hdfs的端口`9000`。这三个文件修改完成后保存退出。
+
+##2. 编译构建范例
+我们在该目录下需要构建该示例项目，需要执行gradle的构建命令
+```bash
+$ ./gradlew build
+```
+直到构建完成。构建的结果在test任务阶段有可能出现`BUILD FAIL`，没关系，我们只要关心在`gs-yarn-basic-dist/target/gs-yarn-basic-dist`中是否生成了若干个jar文件包。如果没有生成，需要检查构建过程中报出的错误，一个一个去解决就可以了。
+
+##3. 运行范例
+如果发现有三个jar包生成
+```bash
+$ ls
+gs-yarn-basic-appmaster-0.1.0.jar  gs-yarn-basic-container-0.1.0.jar
+gs-yarn-basic-client-0.1.0.jar
+```
+那么我们需要在**该项目的根目录** 去运行client包。
+也就是执行
+```bash
+java -jar ./gs-yarn-basic-dist/target/gs-yarn-basic-dist/gs-yarn-basic-client-0.1.0.jar
+```
+如果运行过程中没有错误的话，我们会在[Hadoop应用程序页面](http://127.0.0.1/8088/cluster)中，看到这个运行的任务。
+![运行的任务](https://github.com/GinRyan/MyNote/raw/master/screenshots/2-2.png)，并且我们可以看到，他的运行状态已经是运行成功了。
+
+因为每一次提交运行一次任务都会有一个不同的application id，所以每一次提交的作业都会在这上面记录，左边栏记录了这些任务运行的状态，并且在FinalStatus记录状态，应用运行历史中会记录作业运行在哪一个节点上。
+因为提交的任务会保存jar文件到计算节点上，因此我们可以到[名称节点页面](http://127.0.0.1:50070)上去查看HDFS中保存的文件。如下图：
+![HDFS文件浏览](https://github.com/GinRyan/MyNote/raw/master/screenshots/2-3.png)
+
+这里我们可以清楚地看到client程序把有关的jar包都上传到了HDFS，我们还可以在这里查看存储的数据的占用的块，文件占用的大小，复制数，以及文件的属主和权限等，当然，文件也是可以下载的。
+
+#4. 在IDEA中打开项目
+
+如果你准备的是IntelliJ IDEA，那么恭喜你，你可以直接导入项目，下载依赖包的时间可能有点长，过程中最好使用代理加速依赖包的下载，否则有可能是无穷无尽的等待，地老天荒的等待。
+第一次打开IDEA可能需要几个步骤对IDEA进行设定(旗舰版和社区版有着较大的区别，在此不讨论这个问题)
+导入时请选择gradle作为导入项目模型。
+导入过程：
+
+1、找到解压目录的项目，导入该项目中的build.gradle文件
+
+![1](https://github.com/GinRyan/MyNote/raw/master/screenshots/2-4-1.png)
+
+2、向导过程使用建议设置
+
+![2](https://github.com/GinRyan/MyNote/raw/master/screenshots/2-4-2.png)
+
+3、选择导入的模块，一定是全部导入
+
+![3](https://github.com/GinRyan/MyNote/raw/master/screenshots/2-4-3.png)
+
+导入了该范例项目的IntelliJ IDEA如下图：
+![IDEA导入范例](https://github.com/GinRyan/MyNote/raw/master/screenshots/2-4.png)
+
+然后我们就可以对该项目进行修改，或者编写我们的范例了。
+
+#5、在STS中打开项目
+
+Java程序员无不认识STS的，STS是Java程序界当中一个必备工具。
+我们可以通过Maven导入的方式将该项目导入，这是比较老牌的方法。当然，现在有更好的构建工具gradle，我们仍然想使用gradle方式导入。
+
+###1. maven方式导入STS
+
+maven方式导入
+ - 导入目录
+
+![1](https://github.com/GinRyan/MyNote/raw/master/screenshots/2-5-1.png)
+
+ - 选择项目，当然，还是全选
+
+![2](https://github.com/GinRyan/MyNote/raw/master/screenshots/2-5-2.png)
+
+等待依赖下载完成后，就可以继续编写代码了。对于如何使用maven进行依赖管理和构建最终应用程序包，请从网络上查找相关内容，后面内容将不使用maven，而使用gradle方式对项目进行依赖管理和构建。
+
+###2. Gradle方式导入STS
+我比较推崇gradle方式管理整个项目的依赖和构建活动，它的脚本是groovy，是一种接近Java的动态语言，它的语言特性让Groovy容易使用DSL来控制一个程序的执行过程。Gradle就是这么一个DSL的产物，他的控制更加灵活多变，可以根据不同的项目需求灵活修改，不像xml那样罗里吧嗦。
+
+使用STS导入gradle项目需要为STS安装BuildShip插件
+Eclipse系包括STS安装插件都是通过一个链接，从help菜单中选择Install software，然后填入这个插件的安装链接
+`http://download.eclipse.org/buildship/updates/e45/releases/1.0`
+![1](https://github.com/GinRyan/MyNote/raw/master/screenshots/2-6-1.png)
+
+然后点击Next继续安装即可, 可能有好几个Next，都是套路。
+
+导入时就仍然还是套路，File->Import->Gradle->Gradle Project，找到项目导入进来。
+
+导入完毕后在STS中应该是如下结构：
+![2](https://github.com/GinRyan/MyNote/raw/master/screenshots/2-6-2.png)
+
+总之，通过gradle或maven的方案可以通用于各个IDE之间，并且可以独立构建和运行生成的jar来测试后面我们要写的代码。
+
+
+附录：
+----
+Hadoop项目：[http://hadoop.apache.org/releases.html](http://hadoop.apache.org/releases.html)
+
+Ubuntu GNOME:[http://www.ubuntugnome.org/download/](http://www.ubuntugnome.org/download/)
+
+Ubuntu：[http://www.ubuntu.com/download](http://www.ubuntu.com/download)
+
+STS：[http://spring.io/tools/sts/all](http://spring.io/tools/sts/all)
+
+如果喜欢用原始的Eclipse，可以选这个：[http://www.eclipse.org/downloads/](http://www.eclipse.org/downloads/)
+
+STS/Eclipse Gradle 插件BuildShip安装地址页面：[https://projects.eclipse.org/projects/tools.buildship/downloads](https://projects.eclipse.org/projects/tools.buildship/downloads)
+
+IntelliJ IDEA 旗舰版/社区版：[https://www.jetbrains.com/idea/download/#section=linux](https://www.jetbrains.com/idea/download/#section=linux)
+
+Gradle：[https://gradle.org/](https://gradle.org/)
+
+Maven：[http://maven.apache.org/download.cgi](http://maven.apache.org/download.cgi)
