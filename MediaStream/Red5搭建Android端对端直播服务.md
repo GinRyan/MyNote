@@ -18,3 +18,5 @@
 
 我们先来看一下直播所需要的端，简单梳理一下思路。
 
+![简单的图](https://github.com/GinRyan/MyNote/raw/master/resource/ms1/1/cqsc1-egg.jpg)
+
