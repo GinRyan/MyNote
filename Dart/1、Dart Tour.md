@@ -6,6 +6,8 @@ Flutter是一个Google官方维护的移动开发框架，拥有很多现代框�
 
 我们按照官网看一下Dart大体的语言语法和库的用法，本文为官网Tour的笔记和部分翻译，会与原文有大量出入。
 
+原文链接: [Dart 2 Tour](https://www.dartlang.org/guides/language/language-tour)
+
 
 
 ### 一个基本的Dart例子
@@ -533,67 +535,446 @@ main() {
 
 ### 函数
 
+Dart 是一个完全面向对象语言，所以即便是函数，也是对象，并且拥有类型，Function类型。这意味着，函数可以被指派为一个变量并且可以作为其它函数参数进行传递。你也可以调用一个Dart类的实例，就像它是一个函数一样。更多详见：[可调用类](https://www.dartlang.org/guides/language/language-tour#callable-classes)。
 
+实现一个函数的例子: 
+
+```dart
+bool isNoble(int atomicNumber) {
+  return _nobleGases[atomicNumber] != null;
+}
+```
+
+尽管《Effective Dart》建议对[公开的API使用类型修饰符](https://www.dartlang.org/guides/language/effective-dart/design#prefer-type-annotating-public-fields-and-top-level-variables-if-the-type-isnt-obvious)，然而你假使省略了返回类型函数依然有效。
+
+```dart
+isNoble(atomicNumber) {
+  return _nobleGases[atomicNumber] != null;
+}
+```
+
+对于只有一行代码的函数，可以使用速记语法:
+
+```dart
+bool isNoble(int atomicNumber) => _nobleGases[atomicNumber] != null;
+```
+
+速记语法`=>表达式`是对`{return 表达式;}`的缩写，`=>`符号有时被称作`大箭头`语法。
+
+> 注意: =>表达式到;之间，只能是表达式，不可以是声明。比如你不能使用if，但是可以用条件表达式。
 
 #### 可选参数
+
+可选参数可以是位置指定或名称指定的，但不能同时包含两者。 
+
+###### 可选命名参数
+
+当调用一个函数，你可以指定命名参数使用`参数名:值`的形式。
+
+```dart
+enableFlags(bold: true, hidden: false);
+```
+
+而当我们定义这么一个函数时，使用`{param1,param2,...}`来指定命名参数。
+
+```dart
+/// 设置 [bold] 和 [hidden] 命名参数标识 ...
+void enableFlags({bool bold, bool hidden}) {
+  // ...
+}
+```
+
+
+
+###### 可选位置参数
+
+在`[]`中包装一组函数参数将它们标记为可选的位置参数： 
+
+```dart
+String say(String from, String msg, [String device]) {
+  var result = '$from says $msg';
+  if (device != null) {
+    result = '$result with a $device';
+  }
+  return result;
+}
+```
+
+不加可选参数调用这个函数：
+
+```dart
+assert(say('Bob', 'Howdy') == 'Bob says Howdy');
+```
+
+附加可选参数调用这个函数: 
+
+```dart
+assert(say('Bob', 'Howdy', 'smoke signal') ==
+    'Bob says Howdy with a smoke signal');
+```
+
+如果是多个可选参数，可以这么包装: 
+
+```dart
+[int one,int two,...]
+```
+
+###### 默认参数值
+
+参数可以定义默认参数值，对名称和位置参数均可用。默认值必须是编译时常量。
+
+如果没有提供默认值，默认值为`null`。
+
+```dart
+/// Sets the [bold] and [hidden] flags ...
+void enableFlags({bool bold = false, bool hidden = false}) {
+  // ...
+}
+
+// bold will be true; hidden will be false.
+enableFlags(bold: true);
+```
+
+下个例子是给位置参数设置默认值:
+
+```dart
+String say(String from, String msg,
+    [String device = 'carrier pigeon', String mood]) {
+  var result = '$from says $msg';
+  if (device != null) {
+    result = '$result with a $device';
+  }
+  if (mood != null) {
+    result = '$result (in a $mood mood)';
+  }
+  return result;
+}
+
+assert(say('Bob', 'Howdy') ==
+    'Bob says Howdy with a carrier pigeon');
+```
+
+复杂一点的，你可以传递有默认值的List或者Map参数。下面的例子定义了一个函数`doStuff()`，指定了一个默认列表参数作为list参数，和一个默认的映射作为gifts参数。
+
+```dart
+void doStuff(
+    {List<int> list = const [1, 2, 3],
+    Map<String, String> gifts = const {
+      'first': 'paper',
+      'second': 'cotton',
+      'third': 'leather'
+    }}) {
+    
+  print('list:  $list');
+  print('gifts: $gifts');
+}
+```
 
 
 
 #### main 函数
 
+每个应用都要有顶级的main()函数，用于提供应用程序入口。二`main()`函数返回`void`，并且有一个可选的`List<String>`参数作为入参数。
 
+这是个简单的WebApp示例:
+
+```dart
+void main() {
+  querySelector('#sample_text_id')
+    ..text = 'Click me!'
+    ..onClick.listen(reverseText);
+}
+```
+
+> 注意: `..`语法称作[级联](https://www.dartlang.org/guides/language/language-tour#cascade-notation-)。通过级联，可以对单个对象的成员执行多个操作。 
+
+对于一个读取参数的控制台应用这里有一个范例:
+
+```dart
+// Run the app like this: dart args.dart 1 test
+void main(List<String> arguments) {
+  print(arguments);
+
+  assert(arguments.length == 2);
+  assert(int.parse(arguments[0]) == 1);
+  assert(arguments[1] == 'test');
+}
+```
+
+可以使用[args参数库](https://pub.dartlang.org/packages/args)，来定义和解析控制台参数。
 
 #### 函数作为第一等对象
+
+你可以传递一个函数作为另一个函数的参数。例如:
+
+```dart
+void printElement(int element) {
+  print(element);
+}
+
+var list = [1, 2, 3];
+
+// 会把printElement函数作为参数传进去
+list.forEach(printElement);
+```
+
+>  补充说明: 不了解foreach和函数对象的人会对上面这段代码的执行一头雾水。由于这行代码省略了lambda式参数写法，省略了代码块花括号和lambda参数表，只保留了方法引用，隐藏了大量信息。
+>
+>  上面这段代码的执行会输出
+>
+>  1
+>  2
+>  3
+>
+>  由于foreach的参数是一个函数，但是这个函数也是有要求的，它只能有一个参数，在foreach遍历list元素时，会将遍历时遇到的元素逐个执行传入printElement()函数中，成为printElement()执行的参数。因此遍历时会多次执行被传入的函数printElement。详细了解请见下节匿名函数，以及函数式编程。
 
 
 
 #### 匿名函数
 
+大多数函数是命名的，比如main()或printElement()。可以创建无名称函数，称之为*匿名函数*，或者有时被称为*lambda*或者*闭包*。你可以为匿名函数指派到一个变量，比如你可以在一个集合中添加或者移除掉。
+
+匿名函数和命名函数很相似，只是没有函数名。
+
+函数体
+
+```dart
+([[Type] param1[, …]]) {
+  codeBlock;
+}; 
+```
+
+示例:
+
+```dart
+void main() {
+  var list = ['apples', 'bananas', 'oranges'];
+  list.forEach((item) {
+    print('${list.indexOf(item)}: $item');
+  });
+}
+```
+
+输出:
+
+```
+0: apples
+1: bananas
+2: oranges
+```
+
+如果该函数只包含一条语句，则可以使用大箭头符号将其缩短。
+
+```dart
+list.forEach(
+    (item) => print('${list.indexOf(item)}: $item'));
+```
 
 
-####  词汇性范围
+
+####  范围作用域
+
+Dart可以通过紧邻的外层花括号范围来确定变量作用范围。最显著的用处是内嵌函数。
+
+```dart
+bool topLevel = true;
+
+void main() {
+  var insideMain = true;
+
+  void myFunction() {
+    var insideFunction = true;
+
+    void nestedFunction() {
+      var insideNestedFunction = true;
+
+      assert(topLevel);
+      assert(insideMain);
+      assert(insideFunction);
+      assert(insideNestedFunction);
+    }
+  }
+}
+```
 
 
 
-#### 词汇性闭包
+#### 闭包作用域
+
+```dart
+/// Returns a function that adds [addBy] to the
+/// function's argument.
+Function makeAdder(num addBy) {
+  return (num i) => addBy + i;
+}
+
+void main() {
+  // Create a function that adds 2.
+  var add2 = makeAdder(2);
+
+  // Create a function that adds 4.
+  var add4 = makeAdder(4);
+
+  assert(add2(3) == 5);
+  assert(add4(3) == 7);
+}
+```
 
 
-
-####测试函数的等同性
 
 
 
 #### 返回值
 
+所有函数都有返回值，没有返回值指定的都返回null。没有显式指定的都会被隐式加入。
+
+```dart
+foo() {}
+
+assert(foo() == null);
+```
+
 
 
 ### 操作符
 
+Dart定义了很多操作符，如下表。可以重载大多数操作符。见[可重载操作符。](https://www.dartlang.org/guides/language/language-tour#overridable-operators)
+
+
+
+| 描述        | 操作符      |
+| ------------------ | ------------------------------------------------------------ |
+| unary postfix      | `*expr*++`    `*expr*--`    `()`    `[]`    `.`    `?.`      |
+| unary prefix       | `-*expr*`    `!*expr*`    `~*expr*`    `++*expr*`    `--*expr*` |
+| multiplicative     | `*`    `/`    `%`    `~/`                                    |
+| additive           | `+`    `-`                                                   |
+| shift              | `<<`    `>>`                                                 |
+| 位运算AND          | `&`                                                          |
+| 位运算XOR          | `^`                                                          |
+| 位运算OR           | `|`                                                          |
+| 关系运算和类型判断 | `>=`    `>`    `<=`    `<`    `as`    `is`    `is!`          |
+| 判等               | `==`    `!=`                                                 |
+| 逻辑AND            | `&&`                                                         |
+| logical OR         | `||`                                                         |
+| if null            | `??`                                                         |
+| 条件               | `*expr1* ? *expr2* : *expr3*`                                |
+| 级联               | `..`                                                         |
+| 赋值               | `=`    `*=`    `/=`    `~/=`    `%=`    `+=`    `-=`    `<<=`    `>>=`    `&=`    `^=`    `|=`    `??=` |
+
+>  警告: 对于在两个操作数上工作的操作符，最左边的操作数决定使用哪个版本的操作符。例如，如果您有一个Vector对象和一个Point对象，则aVector + aPoint将使用Vector的Vector版本。 
+
 ####　数学操作符
 
+Dart支持通用的算术运算符，如下表所示。 
 
+| 操作符    | 说明                                                         |
+| --------- | ------------------------------------------------------------ |
+| `+`       | 加法                                                         |
+| `–`       | 减法                                                         |
+| `-*expr*` | Unary minus, also known as negation (reverse the sign of the expression) |
+| `*`       | Multiply                                                     |
+| `/`       | Divide                                                       |
+| `~/`      | 地板除法, 返回整形结果                                       |
+| `%`       | 取余运算(取模)                                               |
 
-####  逻辑操作符
+#### 类似判定符
+
+运行时类型操作符：`as, is和 is!` 用于运行时检查类型
+
+| 操作符 | 说明                        |
+| ------ | --------------------------- |
+| `as`   | 类型转换                    |
+| `is`   | 如果对象有指定类型返回true  |
+| `is!`  | 如果对象有指定类型返回false |
+
+```dart
+if (emp is Person) {
+  // Type check
+  emp.firstName = 'Bob';
+}
+```
+
+as类型转换:
+
+```dart
+(emp as Person).firstName = 'Bob';
+```
+
+>  注: emp如果不是Person 类型或者是null，会抛出异常。
 
 
 
 #### 赋值操作符
 
+除了类似C和Java的操作符外，增加了`??=`运算符。`??=`仅在赋值变量为空时分配值。
 
+
+
+####  逻辑操作符
+
+同C系语法。
 
 #### 位操作符
 
-
+同C系语法。
 
 #### 条件操作符
 
-
+同C系语法。
 
 #### 级联符号
+
+级联符号可以允许在同一个对象上，多次调用操作。
+
+例如: 
+
+```dart
+querySelector('#confirm') // Get an object.
+  ..text = 'Confirm' // Use its members.
+  ..classes.add('important')
+  ..onClick.listen((e) => window.alert('Confirmed!'));
+```
+
+其等同于:
+
+```dart
+var button = querySelector('#confirm');
+button.text = 'Confirm';
+button.classes.add('important');
+button.onClick.listen((e) => window.alert('Confirmed!'));
+```
+
+另外可以嵌套级联:
+
+```dart
+final addressBook = (new AddressBookBuilder()
+      ..name = 'jenny'
+      ..email = 'jenny@example.com'
+      ..phone = (new PhoneNumberBuilder()
+            ..number = '415-555-0100'
+            ..label = 'home')
+          .build())
+    .build();
+```
+
+要小心级联你的对象，使每次调用都有返回的有效对象，否则会执行失败。
+
+> 注意: 严格的讲，双点号不是操作符，是Dart语法一部分。
+
+> 补充说明: 在我来看，这是个没用的特性。不如用use{} 或者with{}类似的特性代替来的实用。
 
 
 
 ####  其它操作符
+
+| 操作符 | 名称                      | 说明                                                         |
+| ------ | ------------------------- | ------------------------------------------------------------ |
+| `()`   | Function application      | Represents a function call                                   |
+| `[]`   | List access               | Refers to the value at the specified index in the list       |
+| `.`    | Member access             | Refers to a property of an expression; example: `foo.bar` selects property `bar` from expression `foo` |
+| `?.`   | Conditional member access | 对象不为null时访问对象成员                                   |
+
+更多关于`.`, `?.`, `..`操作符，见[类](https://www.dartlang.org/guides/language/language-tour#classes)。
 
 
 
@@ -601,35 +982,37 @@ main() {
 
 #### if 和 else
 
-
+同C系语言。
 
 #### for 循环
 
-
+同C系语言。
 
 #### while和do while
 
-
+同C系语言。
 
 #### break 和 continue
 
-
+同C系语言。
 
 #### switch 和 case
 
+switch case的条件可以是String类型。然而，不支持省略break语法和下落。
 
+> 补充说明：那还要switch干什么！
 
 #### assert 断言
 
-
+同Java。
 
 ### 异常
 
-
-
 #### throw
 
+同Java。
 
+不过throw允许直接抛出字符串说明
 
 #### catch 
 
