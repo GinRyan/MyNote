@@ -1016,17 +1016,126 @@ switch case的条件可以是String类型。然而，不支持省略break语法�
 
 #### catch 
 
+可以指定on后面的异常类型，也可以不指定。
 
+```dart
+try {
+  breedMoreLlamas();
+} on OutOfLlamasException {
+  // A specific exception
+  buyMoreLlamas();
+} on Exception catch (e) {
+  // Anything else that is an exception
+  print('Unknown exception: $e');
+} catch (e) {
+  // No specified type, handles all
+  print('Something really unknown: $e');
+}
+```
 
 #### finally
 
 
 
+```dart
+try {
+  breedMoreLlamas();
+} catch (e) {
+  print('Error: $e'); // Handle the exception first.
+} finally {
+  cleanLlamaStalls(); // Then clean up.
+}
+```
+
 ### 类 
 
+Dart 是一个包含基于mixin混入集成特性的面向对象语言。
 
+每个对象都是类的实例，所有的类都继承自Object. Mixin 意味着每个类都只有一个父类，一个类体可以通过多种类关系树，重用。(类似java 的接口机制)
+
+要创建对象，你可以使用`new`关键字配合一个类的*构造函数*。比如：
+
+```dart
+// Create a Point using Point().
+var p1 = new Point(2, 2);
+
+// Create a Point using Point.fromJson().
+var p2 = new Point.fromJson({'x': 1, 'y': 2});
+```
+
+> Dart 2开始，new可以省略
+
+使用点操作符(`.`)来引用实例中的变量或者方法。
+
+```dart
+var p = new Point(2, 2);
+
+// Set the value of the instance variable y.
+p.y = 3;
+
+// Get the value of y.
+assert(p.y == 3);
+
+// Invoke distanceTo() on p.
+num distance = p.distanceTo(new Point(4, 4));
+```
+
+使用`?.`而不是`.`可以规避左对象因为空指针导致的null指针异常。
+
+有的类提供常量构造函数。可以使用const代替new来构造常构造函数。
+
+```dart
+var p = const ImmutablePoint(2, 2);
+```
+
+> [隐式创建的非正式规范](https://github.com/dart-lang/sdk/blob/master/docs/language/informal/implicit-creation.md)
+
+构建两个相同的编译时常量，会生成一个典型的单例：
+
+```dart
+var a = const ImmutablePoint(1, 1);
+var b = const ImmutablePoint(1, 1);
+
+assert(identical(a, b)); // They are the same instance!
+```
+
+要获取对象的类型，你可以使用`runtimeType`  属性，它会返回一个`Type`对象。
+
+```dart
+print('The type of a is ${a.runtimeType}');
+```
+
+以下开始讨论如何实现一个类
 
 ####  实例变量
+
+定义实体变量
+
+```dart
+class Point {
+  num x; // Declare instance variable x, initially null.
+  num y; // Declare y, initially null.
+  num z = 0; // Declare z, initially 0.
+}
+```
+
+未初始化实体变量值都是null。
+
+所有实例变量都默认生成了隐式getter方法，非final的实例变量生成一个隐式setter。参考:[[Getters 和 setters](https://www.dartlang.org/guides/language/language-tour#getters-and-setters)]
+
+```dart
+class Point {
+  num x;
+  num y;
+}
+
+void main() {
+  var point = new Point();
+  point.x = 4; // Use the setter method for x.
+  assert(point.x == 4); // Use the getter method for x.
+  assert(point.y == null); // Values default to null.
+}
+```
 
 
 
