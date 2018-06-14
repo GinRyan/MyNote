@@ -162,7 +162,7 @@ const bar = 1000000; // Unit of pressure (dynes/cm2)
 const double atm = 1.01325 * bar; // Standard atmosphere
 ```
 
-const关键字不仅用于声明常量变量。您也可以使用它来创建常量值，以及声明创建常量值的构造函数。任何变量都可以有一个常量值。 
+const关键字不仅用于声明常量变量。您也可以使用它来创建常量值，以及声明创建常量值的构造器。任何变量都可以有一个常量值。 
 
 ```dart
 // Note: [] creates an empty list.
@@ -196,7 +196,7 @@ runes (String当中的Unicode字符码点)
 symbols
 ```
 
-由于Dart处处是对象，所以可以使用*构造函数*来初始化变量。有的内建类型有自己的构造函数，例如使用Map()构造函数可以创建一个映射，可以这么用`new Map()`
+由于Dart处处是对象，所以可以使用*构造器*来初始化变量。有的内建类型有自己的构造器，例如使用Map()构造器可以创建一个映射，可以这么用`new Map()`
 
 
 
@@ -429,7 +429,7 @@ var nobleGases = {
 > 注意: 分析器推断gifts是`Map<String,String>`类型，nobleGases是`Map<int, String>`.  
 > 尝试存放不同的类型，会报错。
 
-你可以创建一个相同的对象来使用Map的构造函数
+你可以创建一个相同的对象来使用Map的构造器
 
 ```dart
 var gifts = new Map();
@@ -1053,7 +1053,7 @@ Dart 是一个包含基于mixin混入集成特性的面向对象语言。
 
 每个对象都是类的实例，所有的类都继承自Object. Mixin 意味着每个类都只有一个父类，一个类体可以通过多种类关系树，重用。(类似java 的接口机制)
 
-要创建对象，你可以使用`new`关键字配合一个类的*构造函数*。比如：
+要创建对象，你可以使用`new`关键字配合一个类的*构造器*。比如：
 
 ```dart
 // Create a Point using Point().
@@ -1082,7 +1082,7 @@ num distance = p.distanceTo(new Point(4, 4));
 
 使用`?.`而不是`.`可以规避左对象因为空指针导致的null指针异常。
 
-有的类提供常量构造函数。可以使用const代替new来构造常构造函数。
+有的类提供常量构造器。可以使用const代替new来构造常构造器。
 
 ```dart
 var p = const ImmutablePoint(2, 2);
@@ -1139,11 +1139,253 @@ void main() {
 
 
 
-#### 构造函数
+#### 构造器
+
+```dart
+class Point {
+  num x, y;
+
+  Point(num x, num y) {
+    // There's a better way to do this, stay tuned.
+    this.x = x;
+    this.y = y;
+  }
+}
+```
+
+`this`关键字引用当前实例。
+
+> `this`的用法与Java相同
+
+为实例变量分配构造器参数的模式非常常见，Dart使用语法糖来简化它 :
+
+```dart
+class Point {
+  num x, y;
+
+  // Syntactic sugar for setting x and y
+  // before the constructor body runs.
+  Point(this.x, this.y);
+}
+```
+
+##### 默认构造器
+
+如果自己不声明构造器，会提供一个默认构造器。默认构造器无参数并且调用父类无参数构造器。
+
+##### 构造器不继承
+
+子类不继承父类构造器。声明没有构造器的子类只有默认的（无参数，无名称）构造器。
+
+##### 命名构造器
+
+使用命名构造器为一个类实现多个构造器或提供额外的清晰度:
+
+ ```dart
+class Point {
+  num x, y;
+
+  Point(this.x, this.y);
+
+  // Named constructor
+  Point.origin() {
+    x = 0;
+    y = 0;
+  }
+}
+ ```
+
+构造器不能继承。*如果你想用一个在父类中定义的命名构造器来创建子类，那么你必须在子类中实现该构造器* 。
+
+##### 调用一个非默认父类构造器
+
+默认情况下，子类中的构造器调用父类的无名无参构造器。父类的构造器在构造器体的开头被调用。如果还使用了*初始化器列表*，则会在调用父类之前执行。
+
+1. *初始化器列表*(见下一节)
+2. 超类的无参数构造器
+3. 主类的无参数构造器
+
+ 如果超类没有一个无名的无参构造器，那么你必须手动调用超类中的一个构造器。 在冒号（:)之后指定超类构造器，就在构造器体（如果有）之前。 
+
+```dart
+class Person {
+  String firstName;
+
+  Person.fromJson(Map data) {
+    print('in Person');
+  }
+}
+
+class Employee extends Person {
+  // Person 没有构造器;
+  //你必须调用 super.fromJson(data).
+  Employee.fromJson(Map data) : super.fromJson(data) {
+    print('in Employee');
+  }
+}
+
+main() {
+  var emp = new Employee.fromJson({});
+
+  // 会打印:
+  // in Person
+  // in Employee
+  if (emp is Person) {
+    // 做类型检查
+    emp.firstName = 'Bob';
+  }
+  (emp as Person).firstName = 'Bob';
+}
+```
+
+执行结果:
+
+```dart
+in Person
+in Employee
+```
+
+> 警告：超类构造器不能使用this。可以调用静态方法，但是不能使用实例方法。
+
+##### 初始化列表
+
+除了调用超类构造器之外，还可以在**构造器体运行之前**初始化实例变量。用逗号分隔初始值，在冒号之后。 
+
+```dart
+// 初始化器列表会在构造器体执行之前
+// 设置好实例变量
+Point.fromJson(Map<String, num> json)
+    : x = json['x'], y = json['y'] {
+  print('In Point.fromJson(): ($x, $y)');
+}
+```
+
+> 警告: 初始化器不能使用this关键字。
+
+> 补充说明：以上两个警告均说明构造器执行前以及初始化器列表执行完毕前类的实例没有准备好，this不可用于指向自身实例。
+
+开发流程中，可以使用`assert`在初始化器列表中验证输入。
+
+```dart
+Point.withAssert(this.x, this.y) : assert(x >= 0) {
+  print('In Point.withAssert(): ($x, $y)');
+}
+```
+
+例如:
+
+```dart
+import 'dart:math';
+
+class Point {
+  final num x;
+  final num y;
+  final num distanceFromOrigin;
+
+  Point(x, y)
+      : x = x,
+        y = y,
+        distanceFromOrigin = sqrt(x * x + y * y);
+}
+
+main() {
+  var p = new Point(2, 3);
+  print(p.distanceFromOrigin);
+}
+```
+
+结果:
+
+```
+3.605551275463989
+```
+
+##### 重定向构造
+
+有时候构造器目的只是重定向，那么构造器可以为空，在(`:`)后调用构造器即可。
+
+```dart
+class Point {
+  num x, y;
+
+  // The main constructor for this class.
+  Point(this.x, this.y);
+
+  // Delegates to the main constructor.
+  Point.alongXAxis(num x) : this(x, 0);
+}
+```
+
+##### 常量构造器
+
+如果你的类产生永不改变的对象，你可以使这些对象编译时常量。为此，定义一个const构造函数并确保所有实例变量都是final的。 
+
+```dart
+class ImmutablePoint {
+  static final ImmutablePoint origin =
+      const ImmutablePoint(0, 0);
+
+  final num x, y;
+
+  const ImmutablePoint(this.x, this.y);
+}
+```
+
+##### 工厂构造器
+
+将构造器加上`factory`关键字修饰，便不会每次都产出一个新的实例，比如工厂构造器可以从一个缓存中返回实例或者返回一个子类型实例。
+
+例如: 
+
+```dart
+class Logger {
+  final String name;
+  bool mute = false;
+
+  // _cache is library-private, thanks to
+  // the _ in front of its name.
+  static final Map<String, Logger> _cache =
+      <String, Logger>{};
+
+  factory Logger(String name) {
+    if (_cache.containsKey(name)) {
+      return _cache[name];
+    } else {
+      final logger = new Logger._internal(name);
+      _cache[name] = logger;
+      return logger;
+    }
+  }
+
+  Logger._internal(this.name);
+
+  void log(String msg) {
+    if (!mute) print(msg);
+  }
+```
+
+> 注意: 工厂构造器不能访问this
+
+调用工厂构造器时，仍然使用`new`关键字。
+
+```dart
+var logger = new Logger('UI');
+logger.log('Button clicked');
+```
 
 
 
 #### 方法
+
+方法是提供在对象上的行为的函数。
+
+##### 实例方法
+
+##### Getter和Setter
+
+##### 抽象方法
+
+##### 可重载操作符
 
 
 
@@ -1181,7 +1423,7 @@ void main() {
 
 
 
-#### 使用带构造函数的参数化类型
+#### 使用带构造器的参数化类型
 
 
 
