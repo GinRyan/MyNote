@@ -1381,31 +1381,266 @@ logger.log('Button clicked');
 
 ##### 实例方法
 
+对象上的实例方法可以访问实例变量和`this`。
+
+```dart
+import 'dart:math';
+
+class Point {
+  num x, y;
+
+  Point(this.x, this.y);
+
+  num distanceTo(Point other) {
+    var dx = x - other.x;
+    var dy = y - other.y;
+    return sqrt(dx * dx + dy * dy);
+  }
+}
+```
+
+
+
 ##### Getter和Setter
+
+getter和setter方法可以对对象中的属性进行读写。每个实例变量都是隐式的getter和setter方法。也可以自己实现get和set。
+
+```dart
+class Rectangle {
+  num left, top, width, height;
+
+  Rectangle(this.left, this.top, this.width, this.height);
+
+  // Define two calculated properties: right and bottom.
+  num get right => left + width;
+  set right(num value) => left = value - width;
+  num get bottom => top + height;
+  set bottom(num value) => top = value - height;
+}
+
+void main() {
+  var rect = new Rectangle(3, 4, 20, 15);
+  assert(rect.left == 3);
+  rect.right = 12;
+  assert(rect.left == -8);
+}
+```
+
+
 
 ##### 抽象方法
 
+用法同Java
+
+
+
 ##### 可重载操作符
+
+可以重载表中的操作符
+
+| `<`  | `+`  | `|`  | `[]`  |
+| ---- | ---- | ---- | ----- |
+| `>`  | `/`  | `^`  | `[]=` |
+| `<=` | `~/` | `&`  | `~`   |
+| `>=` | `*`  | `<<` | `==`  |
+| `–`  | `%`  | `>>` |       |
+
+如何重载`+`和`-`:
+
+```dart
+class Vector {
+  final int x, y;
+
+  const Vector(this.x, this.y);
+
+  /// Overrides + (a + b).
+  Vector operator +(Vector v) {
+    return new Vector(x + v.x, y + v.y);
+  }
+
+  /// Overrides - (a - b).
+  Vector operator -(Vector v) {
+    return new Vector(x - v.x, y - v.y);
+  }
+}
+
+void main() {
+  final v = new Vector(2, 3);
+  final w = new Vector(2, 2);
+
+  // v == (2, 3)
+  assert(v.x == 2 && v.y == 3);
+
+  // v + w == (4, 5)
+  assert((v + w).x == 4 && (v + w).y == 5);
+
+  // v - w == (0, 1)
+  assert((v - w).x == 0 && (v - w).y == 1);
+}
+```
+
+如果要重载`==`那么你也要重载`hashCode`的getter方法。详见[实现map键](**https://www.dartlang.org/guides/libraries/library-tour#implementing-map-keys**)。
+
+重载详见[继承类](https://www.dartlang.org/guides/language/language-tour#extending-a-class)。
 
 
 
 #### 抽象类
 
+同Java语法。
+
 
 
 #### 隐式接口
+
+每个类都隐含地定义了一个接口，该接口包含该类的所有实例成员及其实现的任何接口。如果你想创建一个支持类B的API而不继承B的实现的类A，那么类A应该实现B接口。 
+
+> 补充说明:  这句话我真没看明白。看例子，貌似跟Java一样。
+
+```dart
+// A person. The implicit interface contains greet().
+class Person {
+  // In the interface, but visible only in this library.
+  final _name;
+
+  // Not in the interface, since this is a constructor.
+  Person(this._name);
+
+  // In the interface.
+  String greet(String who) => 'Hello, $who. I am $_name.';
+}
+
+// An implementation of the Person interface.
+class Impostor implements Person {
+  get _name => '';
+
+  String greet(String who) => 'Hi $who. Do you know who I am?';
+}
+
+String greetBob(Person person) => person.greet('Bob');
+
+void main() {
+  print(greetBob(new Person('Kathy')));
+  print(greetBob(new Impostor()));
+}
+```
+
+实现多个接口：
+
+```dart
+class Point implements Comparable, Location {...}
+```
 
 
 
 #### 继承扩展一个类
 
+使用`extends`创建一个子类，并且`super`关键字可以引用父类。
+
+同Java语法。
+
+```dart
+class Television {
+  void turnOn() {
+    _illuminateDisplay();
+    _activateIrSensor();
+  }
+  // ···
+}
+
+class SmartTelevision extends Television {
+  void turnOn() {
+    super.turnOn();
+    _bootNetworkInterface();
+    _initializeMemory();
+    _upgradeApps();
+  }
+  // ···
+}
+```
+
+##### 重载成员
+
+类似Java，重载的成员函数也需要有``@override`  `修饰:
+
+```dart
+class SmartTelevision extends Television {
+  @override
+  void turnOn() {...}
+  // ···
+}
+```
+
+>  要在类型安全的代码中缩小方法参数或实例变量的类型， 你可以使用covariant关键字. 
+
+##### noSuchMethod()
+
+要检测或者响应一些尝试调用不存在的方法或者实例变量，你可以重载`noSuchMethod()`。
+
+```dart
+class A {
+  // 除非你重载了noSuchMethod, 否则尝试调用一个不存在的方法会
+  // 导致抛出 NoSuchMethodError.
+  @override
+  void noSuchMethod(Invocation invocation) {
+    print('You tried to use a non-existent member: ' +
+        '${invocation.memberName}');
+  }
+}
+```
+
+详见[noSuchMethod说明](https://github.com/dart-lang/sdk/blob/master/docs/language/informal/nosuchmethod-forwarding.md)。
+
 
 
 #### 枚举类型
 
-
+> 不想看
 
 #### 为类添加特性mixin
+
+mixin是一种在多个类层级树中重用类代码的方式。
+
+使用`with`关键字跟在一个或者多个mixin名称来使用mixin。
+
+```dart
+class Musician extends Performer with Musical {
+  // ···
+}
+
+class Maestro extends Person
+    with Musical, Aggressive, Demented {
+  Maestro(String maestroName) {
+    name = maestroName;
+    canConduct = true;
+  }
+}
+```
+
+要实现mixin，创建一个类只继承Object，不声明构造函数，没有任何`super`调用。
+
+```dart
+abstract class Musical {
+  bool canPlayPiano = false;
+  bool canCompose = false;
+  bool canConduct = false;
+
+  void entertainMe() {
+    if (canPlayPiano) {
+      print('Playing piano');
+    } else if (canConduct) {
+      print('Waving hands');
+    } else {
+      print('Humming to self');
+    }
+  }
+}
+```
+
+> 注意:  对于1.13，在DartVM上的mixin的两个限制已经被取消。
+>
+> - mixin 可以继承其它类
+> - mixin 可以调用`super()`
 
 
 
