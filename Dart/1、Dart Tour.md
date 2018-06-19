@@ -1867,15 +1867,97 @@ T first<T>(List<T> ts) {
 
 ### 可调用类
 
+为了允许Dart类可以像函数一样被调用，可以实现`call()`函数。
+
+例如：
+
+```dart
+class WannabeFunction {
+  //实现一个call函数，那么这个类的实例就可以像函数一样调用
+  call(String a, String b, String c) => '$a $b $c!';
+}
+
+main() {
+  var wf = new WannabeFunction();
+  //实例被用作函数来调用
+  var out = wf("Hi","there,","gang");
+  print('$out');
+}
+```
 
 
-### 独立化
 
+### 隔离性
 
+大多数电脑，即使在移动平台上，也有多核CPU。为了利用所有这些核心，开发人员传统上使用并发运行的共享内存线程。但是，共享状态并发容易出错，并可能导致代码复杂化。
 
-### 定义类型
+所有Dart代码都不是在线程内运行，而是在分离内部运行。每个隔离区都有自己的内存堆，确保隔离区的状态不能从任何其他隔离区访问。
 
+### *typedef* 
 
+Dart中，函数也是对象，字符串和数字也是对象。*typedef*关键字，也就是*Function类型别名*，给Function类型一个名称。当Function类型被分配给变量时，typedef会保留类型信息。 
+
+这段代码没有使用typedef：
+
+```dart
+class SortedCollection {
+  Function compare;
+  //注意f，这是一个函数对象，定义了传入参数为Object a和Object b的一个函数对象
+  SortedCollection(int f(Object a, Object b)) {
+    compare = f;
+  }
+}
+
+// 初始化，没有提供有效实现，只是示例.
+int sort(Object a, Object b) => 0;
+
+void main() {
+  SortedCollection coll = SortedCollection(sort);
+
+  // All we know is that compare is a function,
+  // but what type of function?
+  assert(coll.compare is Function);
+}
+```
+
+当f赋值给compare的时候，类型信息会丢失。`f`类型是返回int类型的具有参数表`(Object, Object)` ，然而compare是`Function`类型。如果我们改变代码来使用显式命名来维持类型信息，那么开发者和工具都可以使用这些信息。
+
+使用typedef: 
+
+```dart
+typedef Compare = int Function(Object a, Object b);
+
+class SortedCollection {
+  Compare compare;
+
+  SortedCollection(this.compare);
+}
+
+// 初始化，没有提供有效实现，只是示例.
+int sort(Object a, Object b) => 0;
+
+void main() {
+  SortedCollection coll = SortedCollection(sort);
+  assert(coll.compare is Function);
+  assert(coll.compare is Compare);
+}
+```
+
+由于typedef是简化的别名，也提供了检查任何函数的类型。
+
+```dart
+typedef Compare<T> = int Function(T a, T b);
+
+int sort(int a, int b) => a - b;
+
+void main() {
+  assert(sort is Compare<int>); // True!
+}
+```
+
+> 注意：typedef当前只能用于函数类型。
+
+> 补充说明：那有个屁用。
 
 #### 元数据支持
 
@@ -1922,7 +2004,7 @@ void doSomething() {
 }
 ```
 
-元数据可以出现在库，类，类型定义，类型参数，构造函数，工厂，函数，字段，参数或变量声明之前以及导入或导出指令之前。您可以使用反射在运行时检索元数据。 
+元数据可以出现在库，类，*typedef* ，类型参数，构造函数，工厂，函数，字段，参数或变量声明之前以及导入或导出指令之前。您可以使用反射在运行时检索元数据。 
 
 ### 注释
 
