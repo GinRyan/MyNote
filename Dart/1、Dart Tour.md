@@ -1642,25 +1642,200 @@ abstract class Musical {
 > - mixin 可以继承其它类
 > - mixin 可以调用`super()`
 
+> 补充说明：没看明白。还得看看详细说明 [Dart中的mixin](https://www.dartlang.org/articles/language/mixins)
+
 
 
 #### 类变量和方法
+
+使用`static`关键字来修饰类级别的变量和方法
+
+##### 静态变量
+
+```dart
+class Queue {
+  static const initialCapacity = 16;
+  // ···
+}
+
+void main() {
+  assert(Queue.initialCapacity == 16);
+}
+```
+
+静态变量是惰性的，直到被使用时他们才会被初始化
+
+##### 静态方法
+
+静态方法是不操作实例的，所以不能访问`this`。
+
+```dart
+import 'dart:math';
+
+class Point {
+  num x, y;
+  Point(this.x, this.y);
+
+  static num distanceBetween(Point a, Point b) {
+    var dx = a.x - b.x;
+    var dy = a.y - b.y;
+    return sqrt(dx * dx + dy * dy);
+  }
+}
+
+void main() {
+  var a = new Point(2, 2);
+  var b = new Point(4, 4);
+  var distance = Point.distanceBetween(a, b);
+  assert(2.8 < distance && distance < 2.9);
+  print(distance);
+}
+```
+
+> 注意：尽量使用顶级方法，而不是静态方法、用于常见或者广泛的实用程序和功能。
+
+可以在编译期常量使用静态方法。你可以传一个静态方法作为参数给`常量构造器`。
 
 
 
 ### 泛型
 
+List类型可以看到是`List<E>` 类型。这里的`E`就是参数化泛型类型。约定情况下，类型变量一般是单字母名称。
+
 #### 为何用泛型?
 
+泛型对于更加模板化的代码和更加有相似的行为或者正确指定泛型类型会生成更好的生成代码。 
 
+一种很好的实践是，如果你将要设计多个行为相似的接口，那不如抽象成一个共享的接口，并且能适应多种对象。比如，要缓存一个对象：
 
-#### 集合关键字
+```dart
+abstract class ObjectCache {
+  Object getByKey(String key);
+  void setByKey(String key, Object value);
+}
+```
+
+并且发现还存在一个缓存字符串的接口很类似：
+
+```dart
+abstract class StringCache {
+  String getByKey(String key);
+  void setByKey(String key, String value);
+}
+```
+
+于是，希望让他们从形式上重用，那么就让类型成为一个参数：
+
+```dart
+abstract class Cache<T> {
+  T getByKey(String key);
+  void setByKey(String key, T value);
+}
+```
+
+`T`成为了泛型参数的类型占位符。
+
+#### 集合字面语法
+
+`List`和`Map`都有字面语法，都可以快速为需要的集合初始化。
+
+```dart
+var names = <String>['Seth', 'Kathy', 'Lars'];
+var pages = <String, String>{
+  'index.html': 'Homepage',
+  'robots.txt': 'Hints for web robots',
+  'humans.txt': 'We are people, not machines'
+};
+```
 
 
 
 #### 使用带构造器的参数化类型
 
+例如：
 
+```dart
+var names = new List<String>();
+names.addAll(['Seth', 'Kathy', 'Lars']);
+var nameSet = new Set<String>.from(names);
+```
+
+下面代码示例了map：
+
+```dart
+var views = new Map<int, View>();
+```
+
+##### 泛型集合与包含的类型：
+
+Dart泛型类型被`通用化`，这意味着它们在运行时提供它们的类型信息。 
+
+```dart
+var names = new List<String>();
+names.addAll(['Seth', 'Kathy', 'Lars']);
+print(names is List<String>); // true
+```
+
+> 注意 ：在Java中，泛型类型会被擦除，也就是说，运行时泛型类型参数会被移除。在Java中，你可以测试一个对象是不是List类型，但是无法测试是否是List<String>。
+
+
+
+###### 缩小泛型参数类型范围
+
+有时候，泛型参数类型需要缩小范围，使用`extends`关键字。、
+
+```dart
+class Foo<T extends SomeBaseClass> {
+  // Implementation goes here...
+  String toString() => "Instance of 'Foo<$T>'";
+}
+
+class Extender extends SomeBaseClass {...}
+```
+
+使用限定的类型或者它的子类都可以作为泛型参数：
+
+```dart
+var someBaseClassFoo = new Foo<SomeBaseClass>();
+var extenderFoo = new Foo<Extender>();
+```
+
+甚至不写也行：
+
+```dart
+var foo = new Foo();
+print(foo); // 默认是'Foo<SomeBaseClass>'的实例
+```
+
+但是超出了限定的类型，那就会出错：
+
+```dart
+var foo = new Foo<Object>();//静态分析期间就会报错
+```
+
+##### 泛型方法
+
+Dart的泛型支持是限于类的。有更加灵活新颖的泛型语法，叫做*泛型方法*，允许类参数加到方法和函数上。
+
+```dart
+//在函数层面，声明T为泛型参数，并且将T置为占位符
+T first<T>(List<T> ts) {
+  // Do some initial work or error checking, then...
+  T tmp = ts[0];
+  // Do some additional checking or processing...
+  return tmp;
+}
+```
+
+这里first(<T>)的泛型类型参数，允许你在几个地方使用类型参数T： 
+
+- 函数返回类型(`T`)
+
+- 参数类型(`List<T>`)
+
+- 局部变量(`T tmp`)
+
+  
 
 ### 库和可见性
 
@@ -1688,7 +1863,7 @@ abstract class Musical {
 
 ### Generator
 
-####可调用类
+#### 可调用类
 
 
 
