@@ -1861,37 +1861,139 @@ T first<T>(List<T> ts) {
 
 
 
-### Generator
-
-#### 可调用类
+### 流(Stream)和迭代器(Iterator)生成器
 
 
 
-#### 独立化
+### 可调用类
 
 
 
-#### 定义类
+### 独立化
+
+
+
+### 定义类型
 
 
 
 #### 元数据支持
 
+元数据可以为代码附加信息。元数据注解使用`@ ` 标记，后面跟上一个编译期常量，或者一个
 
+常量构造器。有两个Dart中最常见的注解：`@deprecated `和`@override`。
+
+`@deprecated `示例：
+
+```dart
+class Television {
+  /// _Deprecated: Use [turnOn] instead._
+  @deprecated
+  void activate() {
+    turnOn();
+  }
+
+  /// Turns the TV's power on.
+  void turnOn() {...}
+}
+```
+
+自定义的元数据类型，这是一个`@todo`的注解示例：
+
+```dart
+library todo;
+
+class Todo {
+  final String who;
+  final String what;
+
+  const Todo(this.who, this.what);
+}
+```
+
+使用`@todo`注解：
+
+```dart
+import 'todo.dart';
+
+@Todo('seth', 'make this do something')
+void doSomething() {
+  print('do something');
+}
+```
+
+元数据可以出现在库，类，类型定义，类型参数，构造函数，工厂，函数，字段，参数或变量声明之前以及导入或导出指令之前。您可以使用反射在运行时检索元数据。 
 
 ### 注释
 
-
+Dart支持单行注释，多行注释，和文档注释。
 
 #### 单行注释
 
-
+```dart
+void main() {
+  // TODO: refactor into an AbstractLlamaGreetingFactory?
+  print('Welcome to my Llama farm!');
+}
+```
 
 #### 多行注释
+
+```dart
+void main() {
+  /*
+   * This is a lot of work. Consider raising chickens.
+
+  Llama larry = Llama();
+  larry.feed();
+  larry.exercise();
+  larry.clean();
+   */
+}
+```
 
 
 
 #### 文档注释
+
+文档注释功能类似多行注释，但是在括号中可以引用类、方法、字段、顶级变量、函数和参数。括号中的名称会在文档化的程序元素的词汇范围内解析。
+
+```dart
+/// A domesticated South American camelid (Lama glama).
+///
+/// Andean cultures have used llamas as meat and pack
+/// animals since pre-Hispanic times.
+class Llama {
+  String name;
+
+  /// Feeds your llama [Food].
+  ///
+  /// The typical llama eats one bale of hay per week.
+  void feed(Food food) {
+    // ...
+  }
+
+  /// Exercises your llama with an [activity] for
+  /// [timeLimit] minutes.
+  void exercise(Activity activity, int timeLimit) {
+    // ...
+  }
+}
+```
+
+在生成的文档中，[Food]成为Food类的API文档的链接。 
+
+方便的工具：
+
+要解析Dart代码生成html文档，可以使用SDK里的[文档生成工具](https://github.com/dart-lang/dartdoc#dartdoc)。
+
+如何结构化注释，参见[Guidelines for Dart Doc Comments.](https://www.dartlang.org/guides/language/effective-dart/documentation) 
+
+### 概要
+
+这只是一篇概要性的Dart 2语法的说明，更多特性正在实现中，并且基于在不破坏现有的代码。
+
+更多详细信息查看[Dart 语言规范](https://www.dartlang.org/guides/language/spec) 和 [Effective Dart](https://www.dartlang.org/guides/language/effective-dart). 了解Dart的核心库，参见 [A Tour of the Dart Libraries](https://www.dartlang.org/guides/libraries/library-tour). 
 
 
 
