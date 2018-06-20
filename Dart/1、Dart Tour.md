@@ -1839,25 +1839,193 @@ T first<T>(List<T> ts) {
 
 ### 库和可见性
 
+`import`和`library`指令可以帮助开发者创建模块化可共享的代码仓库。库不仅仅提供API，还有一系列私有的代码。由`_`开头的标识符只能在库当中可见。*每一个Dart应用都是一个库*，尽管没有使用`library`指令。
+
+库可以通过包管理机制进行分发。参见[Pub Package and Asset Manager](https://www.dartlang.org/tools/pub) 。SDK中包含包管理器。
+
+
+
 #### 使用库
+
+使用`import`指定一个可以被其它的库引用的库的命名空间。
+
+比如，Dart Web应用一般可以用`dart:html`库，可以这样导入：
+
+```dart
+import 'dart:html';
+```
+
+导入库的唯一必须参数是指定库的Uri位置。对于内建的库，uri是指定的`dart:`  scheme。
+
+对于第三方导入库，你可以使用一个文件系统路径，使用`package:`scheme修饰。
+
+##### 指定库前缀
+
+指定库前缀，可以防止多个库中同名的标识符的混淆。
+
+```dart
+import 'package:lib1/lib1.dart';
+import 'package:lib2/lib2.dart' as lib2;
+
+// Uses Element from lib1.
+Element element1 = Element();
+
+// Uses Element from lib2.
+lib2.Element element2 = lib2.Element();
+```
+
+##### 仅导入库的一部分
+
+选择性导入库的一部分
+
+```dart
+// Import only foo.
+import 'package:lib1/lib1.dart' show foo;
+
+// Import all names EXCEPT foo.
+import 'package:lib2/lib2.dart' hide foo;
+```
+
+
+
+##### 惰性加载/延迟加载库
+
+延迟加载（也称为惰性加载）允许应用程序在需要时加载库。以下是您可能会使用延迟加载的一些情况： 
+
+- 裁剪应用的初始大小
+- A/B测试，算法的可替换实现
+- 加载不常用功能
+
+惰性加载一个库，你必须使用`deferred as` 关键字(表意为 压后)。
+
+```dart
+import 'package:greetings/hello.dart' deferred as hello;
+```
+
+
+
+当真正开始加载这个库的时候，在延迟加载库标识符上调用`loadLibrary()` 函数
+
+```dart
+Future greet() async {
+  await hello.loadLibrary();
+  hello.printGreeting();
+}
+```
+
+`await`是异步关键字，会等待加载库完成后继续执行。
+
+`loadLibrary()`函数多次执行是不会有问题的，因为库只会被加载一次。
+
+要记住几个问题：
+
+- 延迟库的常量不是在导入文件中的常量。请记住，这些常量在加载延迟库之前不存在。 
+- 您不能在导入文件中使用延迟库中的类型。相反，考虑将接口类型移到由延迟库和导入文件导入的库。 
+- Dart隐式地将loadLibrary() 插入到您使用`deferred as` 命名空间中作为命名空间。 loadLibrary()函数返回一个Future。 
 
 
 
 #### 实现库
 
+见：[Create Library Packages](https://www.dartlang.org/guides/libraries/create-library-packages) 
 
+包括：
+
+- 如何组织库源代码
+- 如何使用`export` 指令
+- 何时使用`part`指令
+
+一个库最起码的目录结构是：
+
+- 由lib目录包含着的所有dart源代码，如果你不用lib目录，`import`关键字将无法找到你的库。你可以根据你的需要创建任何层级的代码。约定的情况下，实现代码在/lib/src目录下。也就是说，在lib/src会被认为是私有的; 其它的包也没有必要导入`src/...`。如果有意图像让lib/src目录公开，你可以直接从一个lib下的文件导出lib/src文件。
+- pubspec.yaml 程序包描述文件
+
+导入库时，如果这个库的某个dart文件是`mypackage/lib/foo/bar.dart`，那么由别的项目导入这个dart文件时，导入代码则是`import 'package:mypackage/foo/bar.dart'`。
 
 ### 异步支持
 
+Dart 库有很多方法返回`Future`和`Stream`对象。这些方法是*异步*的。`async`和`await`关键字支持异步编程，让异步代码看起来与同步代码相似。
+
 #### 处理Future
+
+如果需要异步过程的`Future`结果时，需要两个选项：
+
+- 使用`async`和`await`。
+- 使用Future API。
+
+
+
+使用`async`和`await`的代码是异步代码，看起来很像同步代码。比如使用`await`可以等待异步方法的结果。
+
+```dart
+await lookUpVersion();
+```
+
+要使用`await`代码一定要是一个异步函数——标记了`async`的函数：
+
+```dart
+Future checkVersion() async {
+  var version = await lookUpVersion();
+  // Do something with version
+}
+```
+
+可以使用try..catch捕捉await代码的异常。
+
+```dart
+try {
+  version = await lookUpVersion();
+} catch (e) {
+  // React to inability to look up the version
+}
+```
+
+可以多次使用`await`在异步函数中。比如:
+
+```dart
+var entrypoint = await findEntrypoint();
+var exitCode = await runExecutable(entrypoint, args);
+await flushThenExit(exitCode);
+```
+
+在`await`表达式中，表达式的值通常是返回`Future`; 如果不是，那么值会被封装到Future中。这个Future对象指示了会承诺返回一个对象。`await`表达式的值就是返回的对象。await表达式会一直暂停除非对象可用。
+
+**如果在使用`await`的时候得到编译错误，确保`await`是一个异步函数。**
+
+比如，如果在你的应用的`main`函数中使用`await`，那么`main()`必须是标记为`async`：
+
+```dart
+Future main() async {
+  checkVersion();
+  print('In main: version is ${await lookUpVersion()}');
+}
+```
 
 
 
 #### 声明异步函数
 
+一个*异步函数*是一个函数体被`async`标记的函数。
+
+例如一个同步函数：
+
+```dart
+String lookUpVersion() => '1.0.0';//直接返回的结果
+```
+
+要改成异步函数， 由于消费了时间，那么就要有如下的修改：
+
+```dart
+Future<String> lookUpVersion() async => '1.0.0'; //返回结果会被自动包装成Future<T>
+```
+
+如果没有必要的返回值，那么返回使用`Future<void>`。
+
 
 
 #### 处理Stream
+
+
 
 
 
