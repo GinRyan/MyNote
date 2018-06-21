@@ -2025,11 +2025,84 @@ Future<String> lookUpVersion() async => '1.0.0'; //返回结果会被自动包�
 
 #### 处理Stream
 
+我们要从Stream里获取到值，你有两个选项：
 
+- 使用`async`并且使用一个异步循环（`await for`）
+- 使用Stream API。
+
+> 注意：除非你想等待流当中所有的结果，你才能考虑用await for。比如，你通常是不可以`await for` 等待UI事件监听器的，因为UI框架会发送无限的事件流。
+
+一个异步循环类似：
+
+```dart
+await for (varOrType identifier in expression) {
+  // 每当Stream释放一个值就会执行
+}
+```
+
+表达式的值，一定包含Stream。
+
+- 1、流在获取到值以前会等待
+- 2、执行for循环的主体，将变量设置为发出的值。
+- 3、重复执行以上两个步骤直到流关闭
+
+要停止监听流的执行，可以使用`break`和`return`语句，会中断循环并不再订阅流。
+
+**如果你在实现一个异步循环的时候，得到了编译时错误，请确认`await for`所在的是异步方法中。**  
+
+如下，在应用的`main`函数中使用异步循环，`main()`函数体必须标记为`async`:
+
+```dart
+Future main() async {
+  // ...
+  await for (var request in requestServer) {
+    handleRequest(request);
+  }
+  // ...
+}
+```
+
+关于更详细的异步编程说明，看[`dart:async`](https://www.dartlang.org/guides/libraries/library-tour#dartasync---asynchronous-programming)章节，再看[Dart Language Asynchrony Support: Phase 1](https://www.dartlang.org/articles/language/await-async) 和 [Dart Language Asynchrony Support: Phase 2](https://www.dartlang.org/articles/language/beyond-async) ，以及[`dart语言规范`](https://www.dartlang.org/guides/language/spec)
 
 
 
 ### 流(Stream)和迭代器(Iterator)生成器
+
+Dart有内建的生成器，可以产出值序列。
+
+- 同步生成器：返回`Interable`对象
+- 异步生成器：返回`Stream`对象
+
+要实现同步生成器方法，标记函数体为`sync*`，使用`yield`语句来传值：
+
+```dart
+Iterable<int> naturalsTo(int n) sync* {
+  int k = 0;
+  while (k < n) yield k++;
+}
+```
+
+要实现异步生成器函数，标记函数体为`async*`，并且使用`yield`语句传值：
+
+```dart
+Stream<int> asynchronousNaturalsTo(int n) async* {
+  int k = 0;
+  while (k < n) yield k++;
+}
+```
+
+如果使用递归生成器，可以使用`yield*`提高性能：
+
+```dart
+Iterable<int> naturalsDownFrom(int n) sync* {
+  if (n > 0) {
+    yield n;
+    yield* naturalsDownFrom(n - 1);
+  }
+}
+```
+
+详细见：[Dart Language Asynchrony Support: Phase 2](https://www.dartlang.org/articles/language/beyond-async). 
 
 
 
