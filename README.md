@@ -3,6 +3,12 @@ MyNote
 
 Yes,this is just my note.
 
+
+
+
+
+
+
 ## Hadoop学习笔记
 
 | 目录                                                         |
@@ -27,7 +33,10 @@ Yes,this is just my note.
 | 目录                                                      |
 | :-------------------------------------------------------- |
 | [NestedScroll类型接口](./Android/NestedScroll类型接口.md) |
-|                                                           |
+| ijkplayer如何修改最少的代码降低时延                       |
+| nginx-rtmp-module 配置手记                                |
+| CMake 使用手记                                            |
+| Android.mk 使用手记                                       |
 
 
 
@@ -45,5 +54,25 @@ Yes,this is just my note.
 |    目录                                                            |
 | :---------------------------------------------------------------|
 | [1、Dart Tour.md](./Dart/1、DartTour.md) |
+
+## Xposed
+
+| 目录                                       |
+| ------------------------------------------ |
+| [1、Xposed入门](./Xposed/1、xposed入门.md) |
+| 2、云村清洁工源码分析                      |
+
+
+
+## Python
+
+| 目录 |
+| ---- |
+|      |
+|      |
+|      |
+|      |
+|      |
+
 
 
