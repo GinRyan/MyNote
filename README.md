@@ -68,7 +68,7 @@ Yes,this is just my note.
 
 | 目录 |
 | ---- |
-|      |
+| [windows命令以及环境变量速成](./Windows/windows命令以及环境变量速成.md)     |
 |      |
 |      |
 |      |
